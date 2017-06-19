@@ -10,6 +10,36 @@
 
 module.exports = (robot) ->
 
+  robot.router.post '/hubot/pm', (req, res) ->
+    console.log(robot.name)
+    data = req.body
+    robot.reply user: data.replyTo, "#{data.message}"
+    res.end ""
+
+  robot.router.post '/hubot/room', (req, res) ->
+    console.log(robot.name)
+    data = req.body
+    robot.messageRoom data.room, "#{data.message}"
+    res.end ""
+
+
+  robot.respond /haystak (.*)/i, (msg) ->
+    console.log(robot.name)
+    params =
+      _sender: msg.message.user.jid
+      _room: msg.message.room
+      command: msg.match[1]
+
+    params = JSON.stringify(params)
+
+    console.log('Request: ', params)
+
+    msg.http("#{process.env.PLATFORM_URL}/webhooks/hubot/tasks")
+      .headers('Accept': 'application/json', 'Content-Type': 'application/json')
+      .post(params) (err, response, body) ->
+        if err then msg.send "Error contacting my GF: #{err}"; console.log(err)
+        else console.log('Response, body: ', response, body)
+
   # robot.hear /badger/i, (res) ->
   #   res.send "Badgers? BADGERS? WE DON'T NEED NO STINKIN BADGERS"
   #
